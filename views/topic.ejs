@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css">
+    <title><%= topic.title %> - 하버마스의 공론장</title>
+</head>
+<body>
+    <h1>하버마스의 공론장</h1>
+    <h2><%= topic.title %></h2>
+    <form id="commentForm">
+        <input type="text" name="comment" placeholder="의견을 입력하세요" required>
+        <button type="submit">댓글 추가</button>
+    </form>
+    <h2>의견 목록</h2>
+    <ul id="commentList">
+        <% topic.comments.forEach(comment => { %>
+            <li><%= comment %></li>
+        <% }); %>
+    </ul>
+    <a href="/">뒤로가기</a>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const topicIndex = <%= index %>;
+
+        socket.on('commentAdded', ({ index, comment }) => {
+            if (index === topicIndex) {
+                const commentList = document.getElementById('commentList');
+                const li = document.createElement('li');
+                li.textContent = comment;
+                commentList.appendChild(li);
+            }
+        });
+
+        document.getElementById('commentForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const comment = formData.get('comment');
+
+            fetch(`/topic/${topicIndex}/add-comment`, {
+                method: 'POST',
+                body: new URLSearchParams({ comment })
+            });
+            event.target.reset();
+        });
+    </script>
+</body>
+</html>
